@@ -419,3 +419,336 @@ int main() {
     return 0;
 }
 ```
+
+7. Design a PDA and write a program for simulating the machine which accepts the language 
+{anbn  where n>0, S= {a, b}}.
+
+```
+#include <iostream>
+#include <stack>
+#include <vector> // Include vector header
+#include <string>
+
+using namespace std;
+
+// Function to simulate the PDA
+bool simulatePDA(const string& input) {
+    stack<char> pdaStack;
+    int state = 0; // Start state
+
+    for (char c : input) {
+        switch (state) {
+        case 0: // Initial state, process 'a'
+            if (c == 'a') {
+                pdaStack.push('a'); // Push 'a' to the stack
+                state = 1;          // Stay in state 1
+            } else {
+                return false; // Invalid input: String must start with 'a'
+            }
+            break;
+
+        case 1: // Process 'a's
+            if (c == 'a') {
+                pdaStack.push('a'); // Push 'a' to the stack
+            } else if (c == 'b') {
+                if (!pdaStack.empty() && pdaStack.top() == 'a') {
+                    pdaStack.pop(); // Pop 'a' for 'b'
+                    state = 2;      // Move to state 2
+                } else {
+                    return false; // Stack empty or mismatch
+                }
+            } else {
+                return false; // Invalid input
+            }
+            break;
+
+        case 2: // Process 'b's
+            if (c == 'b') {
+                if (!pdaStack.empty() && pdaStack.top() == 'a') {
+                    pdaStack.pop(); // Pop 'a' for 'b'
+                } else {
+                    return false; // Stack empty or mismatch
+                }
+            } else {
+                return false; // Invalid input
+            }
+            break;
+
+        default:
+            return false; // Invalid state
+        }
+    }
+
+    // Accept if stack is empty and input is fully processed
+    return (state == 2 && pdaStack.empty());
+}
+
+int main() {
+    int n;
+    cout << "Enter the number of strings to test: ";
+    cin >> n;
+
+    vector<string> testStrings(n); // Declare vector to hold test strings
+    cout << "Enter the strings:\n";
+    for (int i = 0; i < n; ++i) {
+        cin >> testStrings[i];
+    }
+
+    cout << "\nResults:\n";
+    for (const string& s : testStrings) {
+        cout << "String: " << s << " => " << (simulatePDA(s) ? "Accepted" : "Rejected") << endl;
+    }
+
+    return 0;
+}
+```
+
+
+8. Design a PDA and write a program for simulating the machine which accepts the language {wXwr| w 
+is any string over S={a, b} and wr is reverse of that string and X is a special symbol }.
+
+
+```
+#include <iostream>
+#include <stack>
+#include <vector> // Include the vector header
+#include <string>
+
+using namespace std;
+
+// Function to simulate the PDA
+bool simulatePDA(const string& input) {
+    stack<char> pdaStack;
+    int state = 0; // Start state
+
+    for (char c : input) {
+        switch (state) {
+        case 0: // Read w and push onto the stack
+            if (c == 'a' || c == 'b') {
+                pdaStack.push(c);
+            } else if (c == 'X') {
+                state = 1; // Transition to state q1 after seeing X
+            } else {
+                return false; // Invalid input
+            }
+            break;
+
+        case 1: // Read w^R and compare with stack
+            if (c == 'a' || c == 'b') {
+                if (!pdaStack.empty() && pdaStack.top() == c) {
+                    pdaStack.pop(); // Match top of stack with input
+                } else {
+                    return false; // Mismatch or empty stack
+                }
+            } else {
+                return false; // Invalid input
+            }
+            break;
+
+        default:
+            return false; // Invalid state
+        }
+    }
+
+    // Accept if stack is empty and in the correct state
+    return (state == 1 && pdaStack.empty());
+}
+
+int main() {
+    int n;
+    cout << "Enter the number of strings to test: ";
+    cin >> n;
+
+    vector<string> testStrings(n); // Declare vector to hold test strings
+    cout << "Enter the strings:\n";
+    for (int i = 0; i < n; ++i) {
+        cin >> testStrings[i];
+    }
+
+    cout << "\nResults:\n";
+    for (const string& s : testStrings) {
+        cout << "String: " << s << " => " << (simulatePDA(s) ? "Accepted" : "Rejected") << endl;
+    }
+
+    return 0;
+}
+```
+
+
+9. Design and simulate a Turing Machine that accepts the language anbncn where n >0.
+
+
+```
+#include <iostream>
+#include <string>
+#include <vector> // Include the vector header
+
+using namespace std;
+
+// Function to simulate the Turing Machine
+bool simulateTM(string input) {
+    int n = input.size();
+    int head = 0; // Tape head starts at the first character
+    int state = 0; // Start state
+
+    while (state != 4) { // Continue until halt state
+        switch (state) {
+        case 0: // Find and mark the first 'a'
+            if (head < n && input[head] == 'a') {
+                input[head] = 'X'; // Mark 'a' as 'X'
+                head++; // Move right
+                state = 1; // Go to find 'b'
+            } else if (head < n && input[head] != 'X') {
+                return false; // Invalid input (unbalanced string)
+            } else {
+                state = 4; // Halt if all characters are marked
+            }
+            break;
+
+        case 1: // Find and mark the first 'b'
+            if (head < n && input[head] == 'b') {
+                input[head] = 'Y'; // Mark 'b' as 'Y'
+                head++; // Move right
+                state = 2; // Go to find 'c'
+            } else if (head < n && input[head] != 'Y') {
+                head++; // Skip marked or invalid characters
+            } else {
+                return false; // Invalid input (unbalanced string)
+            }
+            break;
+
+        case 2: // Find and mark the first 'c'
+            if (head < n && input[head] == 'c') {
+                input[head] = 'Z'; // Mark 'c' as 'Z'
+                head--; // Move left to find the next 'a'
+                state = 3; // Go back to find 'a'
+            } else if (head < n && input[head] != 'Z') {
+                head++; // Skip marked or invalid characters
+            } else {
+                return false; // Invalid input (unbalanced string)
+            }
+            break;
+
+        case 3: // Return to the left to find the next 'a'
+            if (head >= 0 && input[head] == 'X') {
+                head++; // Move right to the next unmarked 'a'
+                state = 0; // Restart the process
+            } else if (head >= 0) {
+                head--; // Keep moving left
+            } else {
+                state = 4; // Halt if all characters are processed
+            }
+            break;
+        }
+    }
+
+    // Check if all characters are marked
+    for (char c : input) {
+        if (c != 'X' && c != 'Y' && c != 'Z') {
+            return false;
+        }
+    }
+    return true; // Input is valid
+}
+
+int main() {
+    int n;
+    cout << "Enter the number of strings to test: ";
+    cin >> n;
+
+    vector<string> testStrings(n); // Declare vector for storing test strings
+    cout << "Enter the strings:\n";
+    for (int i = 0; i < n; ++i) {
+        cin >> testStrings[i];
+    }
+
+    cout << "\nResults:\n";
+    for (const string& s : testStrings) {
+        cout << "String: " << s << " => " << (simulateTM(s) ? "Accepted" : "Rejected") << endl;
+    }
+
+    return 0;
+}
+```
+
+
+
+
+10. Design and simulate a Turing Machine which will increment the given binary number by 1.
+
+
+```
+#include <iostream>
+#include <string>
+#include <vector>
+
+using namespace std;
+
+// Function to simulate the Turing Machine for incrementing binary number
+string incrementBinary(string input) {
+    int head = input.length() - 1; // Start at the rightmost digit
+    int state = 0; // Start state
+
+    // Simulate the Turing machine
+    while (state != 4) { // The machine halts at state 4
+        switch (state) {
+        case 0: // Start state
+            if (input[head] == '0') {
+                input[head] = '1'; // If it's '0', change to '1'
+                state = 1; // Halt after incrementing
+            } else if (input[head] == '1') {
+                input[head] = '0'; // If it's '1', change to '0'
+                head--; // Carry the 1 to the left
+                state = 2; // Move to the next state to carry
+            } else {
+                state = 4; // Halt if no valid digit
+            }
+            break;
+            
+        case 2: // Carry state: Look for the next '0' or continue carrying left
+            if (input[head] == '0') {
+                input[head] = '1'; // Change '0' to '1'
+                state = 1; // Halt after incrementing
+            } else if (input[head] == '1') {
+                input[head] = '0'; // Carry the '1'
+                head--; // Move left
+            } else {
+                state = 4; // Halt if no valid digit
+            }
+            break;
+
+        case 3: // If we reach the leftmost bit and need to add a new '1'
+            if (head == -1) { // If we have no more digits to carry
+                input = "1" + input; // Add a new '1' to the left
+                state = 4; // Halt
+            }
+            break;
+            
+        default:
+            state = 4; // Halt state
+            break;
+        }
+    }
+
+    return input; // Return the incremented binary number
+}
+
+int main() {
+    int n;
+    cout << "Enter the number of binary numbers to test: ";
+    cin >> n;
+
+    vector<string> testNumbers(n);
+    cout << "Enter the binary numbers:\n";
+    for (int i = 0; i < n; ++i) {
+        cin >> testNumbers[i];
+    }
+
+    cout << "\nIncremented Results:\n";
+    for (const string& s : testNumbers) {
+        cout << "Original: " << s << " => Incremented: " << incrementBinary(s) << endl;
+    }
+
+    return 0;
+}
+```
