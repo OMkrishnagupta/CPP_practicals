@@ -313,4 +313,109 @@ int main() {
 a. Union of the languages L1 and L2 
 b. Intersection of the languages L1 and L2 
 c. Language L1 L2 (concatenation)
+
+
+```
+#include <iostream>
+#include <set>
+#include <map>
+#include <string>
+#include <vector>
+
+using namespace std;
+
+class FiniteAutomaton {
+public:
+    set<int> states;                             // States
+    set<char> alphabet;                          // Input alphabet
+    map<pair<int, char>, int> transitions;       // Transition function
+    int startState;                              // Start state
+    set<int> acceptStates;                       // Accept states
+
+    // Constructor
+    FiniteAutomaton(set<int> st, set<char> alpha, map<pair<int, char>, int> trans, int start, set<int> accept)
+        : states(st), alphabet(alpha), transitions(trans), startState(start), acceptStates(accept) {}
+
+    // Function to check if the automaton accepts a string
+    bool accepts(const string& input) {
+        int currentState = startState;
+        for (char c : input) {
+            if (transitions.find({currentState, c}) != transitions.end()) {
+                currentState = transitions[{currentState, c}];
+            } else {
+                return false; // No valid transition
+            }
+        }
+        return acceptStates.find(currentState) != acceptStates.end();
+    }
+};
+
+// Function to simulate the union of two FAs
+bool simulateUnion(FiniteAutomaton& fa1, FiniteAutomaton& fa2, const string& input) {
+    return fa1.accepts(input) || fa2.accepts(input);
+}
+
+// Function to simulate the intersection of two FAs
+bool simulateIntersection(FiniteAutomaton& fa1, FiniteAutomaton& fa2, const string& input) {
+    return fa1.accepts(input) && fa2.accepts(input);
+}
+
+// Function to simulate the concatenation of two FAs
+bool simulateConcatenation(FiniteAutomaton& fa1, FiniteAutomaton& fa2, const string& input) {
+    for (size_t i = 0; i <= input.length(); ++i) {
+        string part1 = input.substr(0, i);  // First part of the string
+        string part2 = input.substr(i);    // Remaining part of the string
+        if (fa1.accepts(part1) && fa2.accepts(part2)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+int main() {
+    // Define FA for L1
+    set<int> states1 = {0, 1};
+    set<char> alphabet1 = {'a', 'b'};
+    map<pair<int, char>, int> transitions1 = {{{0, 'a'}, 1}, {{1, 'a'}, 1}, {{1, 'b'}, 1}};
+    int startState1 = 0;
+    set<int> acceptStates1 = {1};
+    FiniteAutomaton fa1(states1, alphabet1, transitions1, startState1, acceptStates1);
+
+    // Define FA for L2
+    set<int> states2 = {0, 1};
+    set<char> alphabet2 = {'a', 'b'};
+    map<pair<int, char>, int> transitions2 = {{{0, 'b'}, 1}, {{1, 'b'}, 1}, {{1, 'a'}, 1}};
+    int startState2 = 0;
+    set<int> acceptStates2 = {1};
+    FiniteAutomaton fa2(states2, alphabet2, transitions2, startState2, acceptStates2);
+
+    // Take input from the user
+    int n;
+    cout << "Enter the number of strings to test: ";
+    cin >> n;
+
+    vector<string> testStrings(n);
+    cout << "Enter the strings:\n";
+    for (int i = 0; i < n; ++i) {
+        cin >> testStrings[i];
+    }
+
+    // Perform union, intersection, and concatenation simulations
+    cout << "\nUnion Simulation:\n";
+    for (const string& s : testStrings) {
+        cout << "String: " << s << " => " << (simulateUnion(fa1, fa2, s) ? "Accepted" : "Rejected") << endl;
+    }
+
+    cout << "\nIntersection Simulation:\n";
+    for (const string& s : testStrings) {
+        cout << "String: " << s << " => " << (simulateIntersection(fa1, fa2, s) ? "Accepted" : "Rejected") << endl;
+    }
+
+    cout << "\nConcatenation Simulation:\n";
+    for (const string& s : testStrings) {
+        cout << "String: " << s << " => " << (simulateConcatenation(fa1, fa2, s) ? "Accepted" : "Rejected") << endl;
+    }
+
+    return 0;
+}
 ```
